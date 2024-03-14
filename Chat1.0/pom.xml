@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<groupId>es.ubu.lsi</groupId>
+	<artifactId>Chat1.0</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>Chat1.0</name>
+	<description>Chat 1.0 en Java con Sockets</description>
+	<properties>
+		<java.version>17</java.version>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<verbose>true</verbose>
+					<fork>true</fork>
+					<executable>"C:\Program Files\Java\jdk-19\bin\javac"<!-- path-to-javac -->
+					</executable>
+					<compilerVersion>1.7</compilerVersion>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.2.1</version>
+				<executions>
+					<execution>
+						<id>server</id>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>es.ubu.lsi.server.ChatServerImpl</mainClass>
+						<arguments>
+							<argument>1500</argument>
+						</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>dani</id>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>es.ubu.lsi.client.ChatClientImpl</mainClass>
+							<arguments>
+								<argument>localhost</argument>
+								<argument>1500</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>dani2</id>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>es.ubu.lsi.client.ChatClientImpl</mainClass>
+							<arguments>
+								<argument>1500</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
