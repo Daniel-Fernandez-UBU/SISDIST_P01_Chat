@@ -1,5 +1,12 @@
 package es.ubu.lsi.client;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
 import es.ubu.lsi.common.ChatMessage;
 
 public class ChatClientImpl implements ChatClient {
@@ -16,9 +23,9 @@ public class ChatClientImpl implements ChatClient {
 	 * @param username - nombre de usuario
 	 */
 	public ChatClientImpl(String server, String username) {
-		this.server = server;
-		this.username = username;
-		this.port = 1500;
+		setServer(server);
+		setUsername(username);
+		setPort(1500);
 	}
 	
 	/**
@@ -29,11 +36,37 @@ public class ChatClientImpl implements ChatClient {
 	 * @param username - nombre de usuario
 	 */
 	public ChatClientImpl(String username) {
-		this.server = "localhost";
-		this.username = username;
-		this.port = 1500;
+		setServer("localhost");
+		setUsername(username);
+		setPort(1500);
+	}
+	
+	/** Inicio - Getters y setters. */
+	public String getServer() {
+		return server;
 	}
 
+	public void setServer(String server) {
+		this.server = server;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	public void setPort(int port) {
+		this.port = port;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	/** Fin - Getters y setters. */
+	
 	/**
 	 * Método main.
 	 * 
@@ -46,12 +79,60 @@ public class ChatClientImpl implements ChatClient {
 	 */
 	public static void main(String[] args) {
 		
+		
+		ChatClientImpl chatClient = null;
+		
+		// Si se ejecuta con servidor y nombre de usuario
+        if (args.length == 2) {
+        	chatClient = new ChatClientImpl(args[0], args[1]);
+        
+        // Si se ejecuta SOLO con nombre de usuario
+        } else if (args.length == 1) {
+        	chatClient = new ChatClientImpl(args[0]);
+        
+        // Si no tiene argumentos o tiene más de 2
+        } else {
+            System.err.println(
+                    "Usage: java ChatClientImpl <server> <username>");
+            System.err.println(
+                    "Or Usage: java ChatClientImpl <username>");
+                System.exit(1);
+        }
+        
+        try (
+                Socket echoSocket = new Socket(chatClient.getServer(), chatClient.getPort());
+                PrintWriter out =
+                    new PrintWriter(echoSocket.getOutputStream(), true);
+                BufferedReader in =
+                    new BufferedReader(
+                        new InputStreamReader(echoSocket.getInputStream()));
+                BufferedReader stdIn =
+                    new BufferedReader(
+                        new InputStreamReader(System.in))
+                
+            ) {
+        		// Arrancamos el hilo de escucha
+    			chatClient.start();
+                String userInput;
+                while ((userInput = stdIn.readLine()) != null) {
+                	out.println(userInput);
+                    System.out.println("echo: " + in.readLine());
+                }
+                
+            } catch (UnknownHostException e) {
+                System.err.println("Don't know about host " + chatClient.getServer());
+                System.exit(1);
+            } catch (IOException e) {
+                System.err.println("Couldn't get I/O for the connection to " + chatClient.getServer()); 
+                System.exit(1);
+            } 
+		
 	}
 	
 	@Override
 	public boolean start() {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
