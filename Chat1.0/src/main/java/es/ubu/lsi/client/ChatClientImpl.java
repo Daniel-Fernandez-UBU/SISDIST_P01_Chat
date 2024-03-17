@@ -4,9 +4,46 @@ import es.ubu.lsi.common.ChatMessage;
 
 public class ChatClientImpl implements ChatClient {
 	
+	private String server;
+	private int port;
+	private String username;
 	
+	/** Constructor de la clase. 
+	 * 
+	 * Se quita el puerto de la definición porque siempre es el 1500
+	 * 
+	 * @param server - servidor al que conectarse
+	 * @param username - nombre de usuario
+	 */
+	public ChatClientImpl(String server, String username) {
+		this.server = server;
+		this.username = username;
+		this.port = 1500;
+	}
+	
+	/**
+	 * Constructor alternativo si no se indica servidor.
+	 * 
+	 * Se toma como servidor "localhost"
+	 * 
+	 * @param username - nombre de usuario
+	 */
+	public ChatClientImpl(String username) {
+		this.server = "localhost";
+		this.username = username;
+		this.port = 1500;
+	}
 
-	// Método Main
+	/**
+	 * Método main.
+	 * 
+	 * Arranca el hilo principal de ejecución del cliente.
+	 * Instancia el cliente y arranca un hilo adicional (método start) a través de Chat ClientListener.
+	 * 
+	 * 
+	 * 
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		
 	}
