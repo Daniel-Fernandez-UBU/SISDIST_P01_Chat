@@ -137,7 +137,7 @@ public class ChatClientImpl implements ChatClient {
 
 	@Override
 	public void sendMessage(ChatMessage msg) {
-		// TODO Auto-generated method stub
+		ChatMessage chatMsg = new ChatMessage(msg.getId(), msg.getType(), msg.getMessage());
 		
 	}
 
@@ -146,6 +146,12 @@ public class ChatClientImpl implements ChatClient {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	private int getId() {
+		int id = this.username.hashCode(); //Id para encapsular en el mensaje.
+		return id;
+	}
+
 	
 	/**
 	 * Clase interna ChatClientListener.
