@@ -101,14 +101,14 @@ public class ChatClientImpl implements ChatClient{
 	 * @return carryOn
 	 * @see #setCarryOn(boolean)
 	 */
-	public boolean getCarryOn() {
+	public boolean isCarryOn() {
 		return carryOn;
 	}
 
 	/**
 	 * Establece el estado.
 	 * @param carryOn
-	 * @see #getcarryOn
+	 * @see #iscarryOn
 	 */
 	public void setCarryOn(boolean carryOn) {
 		this.carryOn = carryOn;
@@ -123,7 +123,7 @@ public class ChatClientImpl implements ChatClient{
 	 */
 	@Override
 	public boolean start() {
-		return false;
+		return isCarryOn();
 	}
 
 	/**
@@ -196,7 +196,9 @@ public class ChatClientImpl implements ChatClient{
         //Creamos nuestro cliente
         ChatClientImpl cliente = new ChatClientImpl(server, port, username);
         
-        cliente.start();
+        if (!cliente.start()) {
+        	throw new IOException("El cliente no está preparado para recibir mensajes");
+        }
 		
 	}
 
