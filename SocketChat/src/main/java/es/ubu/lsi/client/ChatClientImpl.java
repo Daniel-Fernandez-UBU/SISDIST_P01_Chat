@@ -101,14 +101,14 @@ public class ChatClientImpl implements ChatClient{
 	 * @return carryOn
 	 * @see #setCarryOn(boolean)
 	 */
-	public boolean isCarryOn() {
+	public boolean getCarryOn() {
 		return carryOn;
 	}
 
 	/**
 	 * Establece el estado.
 	 * @param carryOn
-	 * @see #carryOn
+	 * @see #getcarryOn
 	 */
 	public void setCarryOn(boolean carryOn) {
 		this.carryOn = carryOn;
@@ -123,7 +123,6 @@ public class ChatClientImpl implements ChatClient{
 	 */
 	@Override
 	public boolean start() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -143,7 +142,6 @@ public class ChatClientImpl implements ChatClient{
 	@Override
 	public void disconect() {
 		// TODO Auto-generated method stub
-		
 	}
 	
 	/**
@@ -171,6 +169,34 @@ public class ChatClientImpl implements ChatClient{
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
+		
+		/** Definimos el puerto y servidor por defecto */
+		final int port = 1500;
+		String server = "localhost";
+		String username = null;
+		
+		/**
+		 * Definimos el número de argumentos permitidos
+		 * y la forma de uso de la clase.
+		 */
+        if (args.length == 2) {
+        	server = args[0];
+        	username = args[1];
+        } else if (args.length == 1) {
+        	username = args[0];
+        } else {
+            System.err.println(
+                    "Usage: java ChatClientImpl <server> <username>");
+            System.err.println(" OR ");
+            System.err.println(
+                    "Usage: java ChatClientImpl <username>");
+                System.exit(1);
+        }
+        
+        //Creamos nuestro cliente
+        ChatClientImpl cliente = new ChatClientImpl(server, port, username);
+        
+        cliente.start();
 		
 	}
 
