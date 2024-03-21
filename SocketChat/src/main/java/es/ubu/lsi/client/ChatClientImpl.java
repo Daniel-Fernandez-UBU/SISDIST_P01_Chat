@@ -95,18 +95,29 @@ public class ChatClientImpl implements ChatClient{
 	
 	/** Sobreescribimos los métodos de la interfaz con su implementación. */
 	
+	/**
+	 * Inicia el cliente.
+	 * @return true or false
+	 */
 	@Override
 	public boolean start() {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
+	/**
+	 * Send Message.
+	 * @param msg
+	 */
 	@Override
 	public void sendMessage(ChatMessage msg) {
 		// TODO Auto-generated method stub
 		
 	}
 
+	/**
+	 * Desconecta el cliente.
+	 */
 	@Override
 	public void disconect() {
 		// TODO Auto-generated method stub
