@@ -152,6 +152,11 @@ public class ChatClientImpl implements ChatClient{
 	 */
 	class ChatClientListener implements Runnable{
 
+		/**
+		 * Levanta la conexión en modo escucha para recibir los mensajes del servidor.
+		 * 
+		 * Si falla al arrancar el modo escucha, establece en "false" cliente.carryOn.
+		 */
 		@Override
 		public void run() {
 			// TODO Auto-generated method stub
