@@ -6,22 +6,40 @@ import es.ubu.lsi.common.ChatMessage;
 
 public class ChatClientImpl implements ChatClient{
 
-	/** El puerto es 1500 en todos los casos */
-	private int port = 1500;
-	
 	/** Atributos de la clase */
-	private int id;
+	private int id, port;
 	private String server, username;
 	private boolean carryOn = true;
 	
-	publi
-	
+	/**
+	 * Constructor de la clase.
+	 * @param server
+	 * @param port
+	 * @param username
+	 */
+	public ChatClientImpl(String server, int port, String username) {
+		this.setPort(port);
+		this.setServer(server);
+		this.setUsername(username);
+	}
+
+	/** Inicio -  Getters y Setters **/
 	/**
 	 * Devuelve el puerto.
 	 * @return port
+	 * @see #setPort(int)
 	 */
 	public int getPort() {
 		return port;
+	}
+	
+	/**
+	 * Establece el puerto.
+	 * @param port
+	 * @see #getPort()
+	 */
+	private void setPort(int port) {
+		this.port = port;
 	}
 
 	/**
@@ -95,7 +113,7 @@ public class ChatClientImpl implements ChatClient{
 	public void setCarryOn(boolean carryOn) {
 		this.carryOn = carryOn;
 	}
-
+	/** Fin - Getters y Setters **/
 	
 	/** Sobreescribimos los métodos de la interfaz con su implementación. */
 	
