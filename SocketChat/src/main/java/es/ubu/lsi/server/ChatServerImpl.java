@@ -29,6 +29,7 @@ public class ChatServerImpl {
 		public void run() {
 			try {
 				for (Socket sock : clientSocket) {
+					
 		            PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
 		        	BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 
