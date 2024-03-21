@@ -1,5 +1,7 @@
 package es.ubu.lsi.client;
 
+import java.io.IOException;
+
 import es.ubu.lsi.common.ChatMessage;
 
 public class ChatClientImpl implements ChatClient{
@@ -11,6 +13,8 @@ public class ChatClientImpl implements ChatClient{
 	private int id;
 	private String server, username;
 	private boolean carryOn = true;
+	
+	publi
 	
 	/**
 	 * Devuelve el puerto.
@@ -137,6 +141,18 @@ public class ChatClientImpl implements ChatClient{
 			// TODO Auto-generated method stub
 			
 		}
+		
+	}
+	
+	/**
+	 * Método main.
+	 * 
+	 * Encargado de lanzar los clientes.
+	 * 
+	 * @param args
+	 * @throws IOException
+	 */
+	public static void main(String[] args) throws IOException {
 		
 	}
 
