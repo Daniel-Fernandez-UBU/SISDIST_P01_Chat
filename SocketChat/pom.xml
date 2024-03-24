@@ -69,6 +69,47 @@
           <artifactId>maven-project-info-reports-plugin</artifactId>
           <version>3.0.0</version>
         </plugin>
+        <plugin>
+			<groupId>org.codehaus.mojo</groupId>
+			<artifactId>exec-maven-plugin</artifactId>
+			<version>1.2.1</version>
+			<executions>
+					<execution>
+						<id>server</id>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>es.ubu.lsi.server.ChatServerImpl</mainClass>
+						</configuration>
+					</execution>
+					<execution>
+						<id>cliente-pio</id>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>es.ubu.lsi.client.ChatClientImpl</mainClass>
+							<arguments>
+								<argument>localhost</argument>
+								<argument>clientePio</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>cliente-blas</id>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>es.ubu.lsi.client.ChatClientImpl</mainClass>
+							<arguments>
+								<argument>blasito</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
       </plugins>
     </pluginManagement>
   </build>
