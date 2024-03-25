@@ -2,10 +2,10 @@ package es.ubu.lsi.client;
 
 import java.io.*;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Scanner;
 
 import es.ubu.lsi.common.ChatMessage;
+import es.ubu.lsi.common.ChatMessage.MessageType;
 
 public class ChatClientImpl implements ChatClient{
 
@@ -130,6 +130,10 @@ public class ChatClientImpl implements ChatClient{
 	 */
 	@Override
 	public boolean start() {
+		
+		Thread hilo = new Thread(new ChatClientListener());
+		hilo.start();
+		
 		return isCarryOn();
 	}
 
@@ -139,7 +143,11 @@ public class ChatClientImpl implements ChatClient{
 	 */
 	@Override
 	public void sendMessage(ChatMessage msg) {
-		// TODO Auto-generated method stub
+		try {
+			data.writeObject(msg);
+		} catch (IOException e) {
+			System.out.println("sendMessage: IOException: " + e.getMessage());
+		}
 		
 	}
 
@@ -148,7 +156,11 @@ public class ChatClientImpl implements ChatClient{
 	 */
 	@Override
 	public void disconect() {
-		// TODO Auto-generated method stub
+		try {
+			miSocket.close();
+		} catch (IOException e) {
+			System.out.println("disconect: IOException: " + e.getMessage());
+		}
 	}
 	
 	/**
@@ -169,8 +181,8 @@ public class ChatClientImpl implements ChatClient{
 	 * Clase interna para el flujo de entrada de los mensajes al cliente.
 	 *  
 	 */
+	
 	private class ChatClientListener implements Runnable {
-
         /**
          * Levanta la conexión en modo escucha para recibir los mensajes del servidor.
          * 
@@ -212,6 +224,10 @@ public class ChatClientImpl implements ChatClient{
 	    String server = "localhost";
 	    String username = null;
 	    Scanner sc = new Scanner(System.in); //Recoger lo que se escriba por consola
+	    String mensaje;
+	    ChatMessage datosEnvio;
+    	MessageType tipoMens = MessageType.MESSAGE;
+	    
 
 	    /**
 	     * Definimos el número de argumentos permitidos
@@ -239,41 +255,18 @@ public class ChatClientImpl implements ChatClient{
 	    
 	    // Iniciar el modo escucha
 	    cliente.start();
+	    
+	    
 
-	    try (
-	            Socket echoSocket = new Socket(cliente.getServer(), cliente.getPort());
-	            PrintWriter out =
-	                    new PrintWriter(echoSocket.getOutputStream(), true);
-	            BufferedReader in =
-	                    new BufferedReader(
-	                            new InputStreamReader(echoSocket.getInputStream()));
-	            BufferedReader stdIn =
-	                    new BufferedReader(
-	                            new InputStreamReader(System.in))
-	    ) {
-
-	        // Iniciar el ChatClientListener para recibir mensajes del servidor
-	        ChatClientListener clientListener = cliente.new ChatClientListener(in);
-	        Thread listenerThread = new Thread(clientListener);
-	        listenerThread.start();
-
-	        // Leer entrada del usuario y enviar al servidor
-	        String userInput;
-	        while ((userInput = stdIn.readLine()) != null) {
-	            out.println(userInput);
-	        }
-	    } catch (UnknownHostException e) {
-	        System.err.println("Don't know about host " + cliente.getServer());
-	        System.exit(1);
-	    } catch (IOException e) {
-	        System.err.println("Couldn't get I/O for the connection to " + cliente.getServer());
-	        System.exit(1);
+	    while(cliente.carryOn) {
+	    	mensaje = sc.nextLine();
+	    	datosEnvio = new ChatMessage(cliente.getId(),tipoMens,mensaje);
+	    	if (mensaje.equalsIgnoreCase("logout")) {
+	    		break;
+	    	}
+	    	cliente.sendMessage(datosEnvio); // Enviamos el mensaje
 	    }
-
-	    if (!cliente.start()) {
-	        throw new IOException("El cliente no está preparado para recibir mensajes");
-	    }
-
+	    sc.close();
 	}
 
 
