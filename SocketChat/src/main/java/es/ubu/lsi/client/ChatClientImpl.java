@@ -1,11 +1,9 @@
 package es.ubu.lsi.client;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Scanner;
 
 import es.ubu.lsi.common.ChatMessage;
 
@@ -15,6 +13,10 @@ public class ChatClientImpl implements ChatClient{
 	private int id, port;
 	private String server, username;
 	private boolean carryOn = true;
+	
+	/** Atributos adicionales */
+	private Socket miSocket;
+	private ObjectOutputStream data;
 	
 	/**
 	 * Constructor de la clase.
@@ -150,18 +152,24 @@ public class ChatClientImpl implements ChatClient{
 	}
 	
 	/**
+	 * Metodo que establece la conexión con el servidor.
+	 */
+	private void establecerConexion() {
+		try {
+			miSocket = new Socket(this.server,this.port);
+			data = new ObjectOutputStream(miSocket.getOutputStream());
+		} catch (IOException e) {
+			System.out.println("Error al establecer la conexion: " + e.getMessage());
+		}
+	}
+	
+	/**
 	 * ChatClientListener Class.
 	 * 
 	 * Clase interna para el flujo de entrada de los mensajes al cliente.
 	 *  
 	 */
 	private class ChatClientListener implements Runnable {
-
-        private BufferedReader in;
-
-        public ChatClientListener(BufferedReader in) {
-            this.in = in;
-        }
 
         /**
          * Levanta la conexión en modo escucha para recibir los mensajes del servidor.
@@ -170,14 +178,22 @@ public class ChatClientImpl implements ChatClient{
          */
         @Override
         public void run() {
-            try {
-                String serverInput;
-                while ((serverInput = in.readLine()) != null) {
-                    System.out.println(serverInput);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        	
+        	try {
+        		ObjectInputStream flujoEntrada = new ObjectInputStream(miSocket.getInputStream());
+        		while(true) {
+        			ChatMessage dataRecibida = (ChatMessage) flujoEntrada.readObject();
+        			System.out.println(dataRecibida.getId() + ": " + dataRecibida.getMessage()); //Mostramos el mensaje
+        		}
+        	//Controlamos los mensajes de las excepciones
+        	} catch (EOFException e) {
+        		System.out.println("ChatClientListener: EOFException: " + e.getMessage());
+        	} catch (IOException i) {
+        		System.out.println("ChatClientListener: IOException: " + i.getMessage());
+        	} catch (ClassNotFoundException c) {
+        		System.out.println("ChatClientListener: ClassNotFoundException: " + c.getMessage());
+        	}
+
         }
     }
 		
@@ -195,6 +211,7 @@ public class ChatClientImpl implements ChatClient{
 	    final int port = 1500;
 	    String server = "localhost";
 	    String username = null;
+	    Scanner sc = new Scanner(System.in); //Recoger lo que se escriba por consola
 
 	    /**
 	     * Definimos el número de argumentos permitidos
@@ -216,6 +233,12 @@ public class ChatClientImpl implements ChatClient{
 
 	    // Creamos nuestro cliente
 	    ChatClientImpl cliente = new ChatClientImpl(server, port, username);
+	    
+	    // Establecemos la conexión con el servidor
+	    cliente.establecerConexion();
+	    
+	    // Iniciar el modo escucha
+	    cliente.start();
 
 	    try (
 	            Socket echoSocket = new Socket(cliente.getServer(), cliente.getPort());
