@@ -155,7 +155,7 @@ public class ChatClientImpl implements ChatClient{
 	 * Clase interna para el flujo de entrada de los mensajes al cliente.
 	 *  
 	 */
-	class ChatClientListener implements Runnable {
+	private class ChatClientListener implements Runnable {
 
         private BufferedReader in;
 
@@ -173,7 +173,7 @@ public class ChatClientImpl implements ChatClient{
             try {
                 String serverInput;
                 while ((serverInput = in.readLine()) != null) {
-                    System.out.println("Server: " + serverInput);
+                    System.out.println(serverInput);
                 }
             } catch (IOException e) {
                 e.printStackTrace();

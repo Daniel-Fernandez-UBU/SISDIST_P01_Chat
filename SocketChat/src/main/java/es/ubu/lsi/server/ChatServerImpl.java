@@ -6,10 +6,10 @@ import java.util.*;
 
 public class ChatServerImpl {
 
-    private List<Socket> clientSockets = Collections.synchronizedList(new ArrayList<>());
-    private List<PrintWriter> writers = Collections.synchronizedList(new ArrayList<>());
+    private List<Object> clientSockets = new ArrayList<>();
+    private List<Object> writers = new ArrayList<>();
 
-    class ChatServerThreadForClient extends Thread {
+    private class ChatServerThreadForClient extends Thread {
         private Socket socket;
         private PrintWriter writer;
 
@@ -30,7 +30,7 @@ public class ChatServerImpl {
                 String inputLine;
                 while ((inputLine = in.readLine()) != null) {
                     System.out.println(socket.getPort() + ": " + inputLine);
-                    sendMessageToAllClients(inputLine);
+                    sendMessageToAllClients(socket.getPort() + ": " + inputLine);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -46,9 +46,9 @@ public class ChatServerImpl {
         }
     }
 
-    public synchronized void sendMessageToAllClients(String message) {
-        for (PrintWriter writer : writers) {
-            writer.println(message);
+    public void sendMessageToAllClients(String message) {
+        for (Object writer : writers) {
+            ((PrintWriter) writer).println(message);
         }
     }
 
