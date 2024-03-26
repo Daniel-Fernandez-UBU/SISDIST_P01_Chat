@@ -126,4 +126,10 @@
             <classpath refid="run.ChatServerImpl.classpath"/>
         </java>
     </target>
+    <!-- Target to generate Javadoc -->
+    <target name="generate-javadoc" description="Generate Javadoc">
+        <javadoc sourcepath="src/main/java" destdir="javadoc">
+            <classpath refid="SocketChat.classpath"/>
+        </javadoc>
+    </target>
 </project>
