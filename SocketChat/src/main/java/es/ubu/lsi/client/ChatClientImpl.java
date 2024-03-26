@@ -145,7 +145,7 @@ public class ChatClientImpl implements ChatClient{
 	 * @param msg
 	 */
 	@Override
-	public void sendMessage(ChatMessage msg) {
+	public synchronized void sendMessage(ChatMessage msg) {
 		try {
 			data.writeObject(msg);
 		} catch (IOException e) {
@@ -158,9 +158,10 @@ public class ChatClientImpl implements ChatClient{
 	 * Desconecta el cliente.
 	 */
 	@Override
-	public void disconect() {
+	public synchronized void disconect() {
 		try {
 			miSocket.close();
+			setCarryOn(false);
 		} catch (IOException e) {
 			System.out.println("disconect: IOException: " + e.getMessage());
 		}
@@ -196,15 +197,18 @@ public class ChatClientImpl implements ChatClient{
         	
         	try {
         		ObjectInputStream flujoEntrada = new ObjectInputStream(miSocket.getInputStream());
-        		while(true) {
+        		while(isCarryOn()) {
         			ChatMessage dataRecibida = (ChatMessage) flujoEntrada.readObject();
         			if (dataRecibida.getId() == getId()) {
         				System.out.println("Yo: " + dataRecibida.getMessage());
         			} else {
         				System.out.println(dataRecibida.getId() + ": " + dataRecibida.getMessage()); //Mostramos el mensaje
         			}
-        			
+        		
         		}
+        	
+        		flujoEntrada.close();
+        		
         	//Controlamos los mensajes de las excepciones
         	} catch (EOFException e) {
         		System.out.println("ChatClientListener: EOFException: " + e.getMessage());
@@ -212,7 +216,7 @@ public class ChatClientImpl implements ChatClient{
         		System.out.println("ChatClientListener: IOException: " + i.getMessage());
         	} catch (ClassNotFoundException c) {
         		System.out.println("ChatClientListener: ClassNotFoundException: " + c.getMessage());
-        	}
+        	} 
 
         }
     }
@@ -235,6 +239,7 @@ public class ChatClientImpl implements ChatClient{
 	    String mensaje;
 	    ChatMessage datosEnvio;
     	MessageType tipoMens = MessageType.MESSAGE;
+    	MessageType tipoIni = MessageType.INICIO;
 	    
 
 	    /**
@@ -264,19 +269,23 @@ public class ChatClientImpl implements ChatClient{
 	    // Iniciar el modo escucha
 	    cliente.start();
 	    
+	    datosEnvio = new ChatMessage(cliente.getId(),tipoIni,username+": inicio chat");
+	    cliente.sendMessage(datosEnvio);
 	    
 	    while(cliente.carryOn) {
 	    	mensaje = sc.nextLine();
 	    	// Incorporamos el nombre de usuario en el mensaje final
 	    	String mensajeFinal = cliente.getUsername() + ":" + mensaje;
 	    	datosEnvio = new ChatMessage(cliente.getId(),tipoMens,mensajeFinal);
+	    	cliente.sendMessage(datosEnvio); // Enviamos el mensaje
 	    	if (mensaje.equalsIgnoreCase("logout")) {
 	    		// Se cambia a no activo
-	    		cliente.setCarryOn(false); 
+	    		cliente.disconect();
 	    	}
-	    	cliente.sendMessage(datosEnvio); // Enviamos el mensaje
+	    	
 	    }
 	    sc.close();
+
 	}
 
 

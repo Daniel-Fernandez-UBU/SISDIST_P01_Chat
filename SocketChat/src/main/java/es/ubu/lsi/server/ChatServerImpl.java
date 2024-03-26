@@ -76,10 +76,7 @@ public class ChatServerImpl implements ChatServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
-        
-        
-        
+
 		
 	}
 
@@ -233,6 +230,8 @@ public class ChatServerImpl implements ChatServer {
 	                		shutdown();
 	                		setAlive(false);
 	                		break; //Terminamos
+	                	} else if (recibido.getType().equals(ChatMessage.MessageType.INICIO)) {
+	                		recibido.setMessage("Nuevo cliente (" + username + ") conectado");
 	                	} 
 	                	
 	                    // Imprimir el mensaje en el área de texto
@@ -240,23 +239,6 @@ public class ChatServerImpl implements ChatServer {
 	                    
 	                    broadcast(recibido);
 	
-	                    /**
-	                    // Reenviar el mensaje a todos los clientes
-	                    for (Map.Entry<Integer, ObjectOutputStream> entry : listadoFlujosSalida.entrySet()) {
-	                        Integer id = entry.getKey();
-	                        ObjectOutputStream flujo = entry.getValue();
-	                        
-	                        try {
-	                            // Se manda solo a los clientes no baneados.
-	                        	if (!clientesBaneados.contains(listadoUsernames.get(id))) {
-	                            	flujo.writeObject(recibido);
-	                                flujo.flush();
-	                            }
-	                        } catch (IOException e) {
-	                            e.printStackTrace();
-	                        }
-	                    }
-	                    */
                 	}
             	}
 
