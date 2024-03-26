@@ -28,6 +28,7 @@ public class ChatClientImpl implements ChatClient{
 		this.setPort(port);
 		this.setServer(server);
 		this.setUsername(username);
+		setId();//Generamos Id unico
 	}
 
 	/** Inicio -  Getters y Setters **/
@@ -63,7 +64,7 @@ public class ChatClientImpl implements ChatClient{
 	 * @param id
 	 * @see #getId()
 	 */
-	public void setId(int id) {
+	public void setId() {
 		// Generamos un "id" único para cada cliente
 		String uniqueId = getUsername() + System.currentTimeMillis();
 		this.id = uniqueId.hashCode();
@@ -197,7 +198,12 @@ public class ChatClientImpl implements ChatClient{
         		ObjectInputStream flujoEntrada = new ObjectInputStream(miSocket.getInputStream());
         		while(true) {
         			ChatMessage dataRecibida = (ChatMessage) flujoEntrada.readObject();
-        			System.out.println(dataRecibida.getId() + ": " + dataRecibida.getMessage()); //Mostramos el mensaje
+        			if (dataRecibida.getId() == getId()) {
+        				System.out.println("Yo: " + dataRecibida.getMessage());
+        			} else {
+        				System.out.println(dataRecibida.getId() + ": " + dataRecibida.getMessage()); //Mostramos el mensaje
+        			}
+        			
         		}
         	//Controlamos los mensajes de las excepciones
         	} catch (EOFException e) {
@@ -259,11 +265,10 @@ public class ChatClientImpl implements ChatClient{
 	    cliente.start();
 	    
 	    
-
 	    while(cliente.carryOn) {
 	    	mensaje = sc.nextLine();
 	    	// Incorporamos el nombre de usuario en el mensaje final
-	    	String mensajeFinal = cliente.getUsername() + " " + mensaje;
+	    	String mensajeFinal = cliente.getUsername() + ":" + mensaje;
 	    	datosEnvio = new ChatMessage(cliente.getId(),tipoMens,mensajeFinal);
 	    	if (mensaje.equalsIgnoreCase("logout")) {
 	    		// Se cambia a no activo
