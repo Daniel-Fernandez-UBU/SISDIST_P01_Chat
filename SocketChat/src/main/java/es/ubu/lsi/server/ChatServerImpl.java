@@ -18,7 +18,7 @@ public class ChatServerImpl implements ChatServer {
 	private HashMap<Integer,Socket> listadoSockets = new HashMap<>();
 	private HashMap<String,Integer> listadoIds = new HashMap<>();
 	private HashMap<Integer,String> listadoUsernames = new HashMap<>();
-	private HashMap<Integer,HashMap<ObjectOutputStream,ObjectInputStream>> clientesBaneados = new HashMap<>();
+	private List<String> clientesBaneados = new ArrayList<>();
 	
     
 	public ChatServerImpl(int port) {
@@ -102,9 +102,15 @@ public class ChatServerImpl implements ChatServer {
 		
 		// Cerramos todas las conexiones abiertas
 		try {
-			listadoFlujosSalida.get(id).close();
-			listadoSockets.get(id).close();
-			listadoFlujosEntrada.get(id).close();
+			if (!listadoFlujosSalida.isEmpty()) {
+				listadoFlujosSalida.get(id).close();
+			}
+			if (!listadoFlujosEntrada.isEmpty()) {
+				listadoFlujosEntrada.get(id).close();
+			}
+			if (!listadoSockets.isEmpty()) {
+				listadoSockets.get(id).close();
+			}
 		} catch (IOException e) {
 			System.out.println("remove: IOException: " + e.getMessage());
 		}
@@ -112,7 +118,8 @@ public class ChatServerImpl implements ChatServer {
 		// Borramos el cliente de todas las listas
         listadoFlujosSalida.remove(id);
         listadoSockets.remove(id);
-        listadoClientes.remove(id);
+        listadoIds.remove(listadoUsernames.get(id));
+        listadoUsernames.remove(id);
         listadoFlujosEntrada.remove(id);
 		
 	}
@@ -132,10 +139,23 @@ public class ChatServerImpl implements ChatServer {
          }
     }
     
+    /**
+     * Clientes baneados.
+     * @param username
+     */
     private void banClient(String username) {
-    	int idBaneado = listadoClientes.
-
+    	clientesBaneados.add(username);
+    	
     }
+    
+    /**
+     * Clientes no baneados.
+     * @param username
+     */
+    private void unBanClient(String username) {
+    	clientesBaneados.remove(username);
+    }
+    
 
     /**
      * Clase que crea el hilo de escucha para cada cliente.
@@ -168,29 +188,48 @@ public class ChatServerImpl implements ChatServer {
             	
             	// Se mantiene activo mientras el servidor está activo
             	while (alive) {
-                	ChatMessage recibido = (ChatMessage) flujoEntrada.readObject();
+                	            		
+            		
+            		ChatMessage recibido = (ChatMessage) flujoEntrada.readObject();
                 	this.id = recibido.getId();
                 	
                 	String[] messageParts = recibido.getMessage().split(":");
                 	this.username = messageParts[0];
-                	System.out.println("Mensaje recibido en el servidor: " + recibido.getMessage());
                 	
-                	if (recibido.getType().equals(ChatMessage.MessageType.LOGOUT)) {
-                		remove(this.id);
+                	// Se comprueba si no está baneado para reenviar su mensaje.
+                	if (!clientesBaneados.contains(this.username)) {
+                		// Añadimos los clientes a los listados
+	                	storeClient();
+	                	
+	                	System.out.println("Mensaje recibido en el servidor: " + recibido.getMessage());
+	                	
+	                	if (recibido.getType().equals(ChatMessage.MessageType.LOGOUT)) {
+	                		remove(this.id);
+	                	} else if (recibido.getType().equals(ChatMessage.MessageType.BAN)) {
+	                		banClient(this.username);
+	                	} else if (recibido.getType().equals(ChatMessage.MessageType.UNBAN)) {
+	                		unBanClient(this.username);
+	                	}
+	                	
+	                    // Imprimir el mensaje en el área de texto
+	                    System.out.println("\n" + this.username + ": " + messageParts[1]);
+	
+	                    // Reenviar el mensaje a todos los clientes
+	                    for (Map.Entry<Integer, ObjectOutputStream> entry : listadoFlujosSalida.entrySet()) {
+	                        Integer id = entry.getKey();
+	                        ObjectOutputStream flujo = entry.getValue();
+	                        
+	                        try {
+	                            // Se manda solo a los clientes no baneados.
+	                        	if (!clientesBaneados.contains(listadoUsernames.get(id))) {
+	                            	flujo.writeObject(recibido);
+	                                flujo.flush();
+	                            }
+	                        } catch (IOException e) {
+	                            e.printStackTrace();
+	                        }
+	                    }
                 	}
-                	
-                    listadoFlujosSalida.put(this.id, this.flujoSalida);
-                    listadoSockets.put(this.id, this.socket);
-                    listadoClientes.put(this.username, this.id);
-                	
-                    // Imprimir el mensaje en el área de texto
-                    System.out.println("\n" + this.username + ": " + messageParts[1]);
-
-                    // Reenviar el mensaje a todos los clientes
-                    for (ObjectOutputStream flujo : listadoFlujosSalida.values()) {
-                        flujo.writeObject(recibido);
-                        flujo.flush();
-                    }
             	}
 
             } catch (IOException e) {
@@ -198,6 +237,23 @@ public class ChatServerImpl implements ChatServer {
             } catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			} 
+        }
+        
+       /**
+        * Solo se guarda la primera vez
+        */
+        private void storeClient() {
+        	
+        	if (listadoUsernames.containsKey(this.id)) {
+        		
+        	} else {
+ 
+                listadoFlujosSalida.put(this.id, this.flujoSalida);
+                listadoSockets.put(this.id, this.socket);
+                listadoIds.put(this.username, this.id);
+                listadoUsernames.put(this.id, this.username);
+        	}
+
         }
     }
 
