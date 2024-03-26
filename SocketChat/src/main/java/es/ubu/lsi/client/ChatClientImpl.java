@@ -262,9 +262,12 @@ public class ChatClientImpl implements ChatClient{
 
 	    while(cliente.carryOn) {
 	    	mensaje = sc.nextLine();
-	    	datosEnvio = new ChatMessage(cliente.getId(),tipoMens,mensaje);
+	    	// Incorporamos el nombre de usuario en el mensaje final
+	    	String mensajeFinal = cliente.getUsername() + " " + mensaje;
+	    	datosEnvio = new ChatMessage(cliente.getId(),tipoMens,mensajeFinal);
 	    	if (mensaje.equalsIgnoreCase("logout")) {
-	    		break;
+	    		// Se cambia a no activo
+	    		cliente.setCarryOn(false); 
 	    	}
 	    	cliente.sendMessage(datosEnvio); // Enviamos el mensaje
 	    }
