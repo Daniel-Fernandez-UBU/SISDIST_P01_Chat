@@ -64,7 +64,9 @@ public class ChatClientImpl implements ChatClient{
 	 * @see #getId()
 	 */
 	public void setId(int id) {
-		this.id = id;
+		// Generamos un "id" único para cada cliente
+		String uniqueId = getUsername() + System.currentTimeMillis();
+		this.id = uniqueId.hashCode();
 	}
 	
 	/**
