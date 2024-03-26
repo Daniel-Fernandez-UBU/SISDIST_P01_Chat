@@ -185,6 +185,8 @@ public class ChatServerImpl implements ChatServer {
             Integer id = entry.getKey();
             ObjectOutputStream flujo = entry.getValue();
             
+            
+            
             try {
                 // Se manda solo a los clientes no baneados.
             	if (!clientesBaneados.contains(listadoUsernames.get(id))) {
@@ -286,6 +288,7 @@ public class ChatServerImpl implements ChatServer {
 	                	    //flujoSalida.writeObject(confirmacionLogout);
 	                	    //flujoSalida.flush();
 	                	    closeClient();
+	                	    clientAlive=false;
 	                		remove(this.id);
 	                	} else if (recibido.getType().equals(ChatMessage.MessageType.BAN)) {
 	                		String userban = messageParts[1].split(" ")[1];

@@ -242,10 +242,10 @@ public class ChatClientImpl implements ChatClient{
         		flujoEntrada = new ObjectInputStream(miSocket.getInputStream());
         		while(!cerrar) {
         			ChatMessage dataRecibida = (ChatMessage) flujoEntrada.readObject();
-        			if (dataRecibida.getId() == getId()) {
-        				System.out.println("Yo: " + dataRecibida.getMessage());
+        			if (dataRecibida.getId() == getId() && !dataRecibida.getType().equals(MessageType.INICIO)) {
+        				System.out.println("Yo:" + dataRecibida.getMessage().split(":")[1]);
         			} else {
-        				System.out.println(dataRecibida.getId() + ": " + dataRecibida.getMessage()); //Mostramos el mensaje
+        				System.out.println(dataRecibida.getMessage()); //Mostramos el mensaje
         			}
         		}
         		
@@ -336,7 +336,7 @@ public class ChatClientImpl implements ChatClient{
 	    	mensaje = sc.nextLine();
 	    	
 	    	// Incorporamos el nombre de usuario en el mensaje final
-	    	String mensajeFinal = cliente.getUsername() + ":" + mensaje;
+	    	String mensajeFinal = cliente.getUsername() + ": " + mensaje;
 	    	    	
 	    	if (mensaje.split(" ")[0].equalsIgnoreCase("ban")) {
 	    		datosEnvio = new ChatMessage(cliente.getId(),tipoMens=MessageType.BAN,mensajeFinal);
