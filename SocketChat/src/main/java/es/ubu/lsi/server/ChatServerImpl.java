@@ -11,6 +11,7 @@ public class ChatServerImpl implements ChatServer {
 	private static final int DEFAULT_PORT = 1500;
 	private int port;
 	private boolean alive = true;
+	ServerSocket servidorSock;
 	
 	/** Mapas para guardar todas las listas */
 	private HashMap<Integer,ObjectOutputStream> listadoFlujosSalida = new HashMap<>();
@@ -58,16 +59,14 @@ public class ChatServerImpl implements ChatServer {
 	public void startup() {
 		
 		
-		
-		ServerSocket servidorSock;
         try {
         	// Iniciamos el server socket con el puerto del servidor
-            servidorSock = new ServerSocket(getPort());
+            this.servidorSock = new ServerSocket(getPort());
             System.out.println("Servidor levantado en el puerto: " + getPort());
 
             // Se mantiene a la escucha de forma infinita
             while (true) {
-                Socket misocket = servidorSock.accept();
+                Socket misocket = this.servidorSock.accept();
                 
                 ServerThreadForClient clientSocket = new ServerThreadForClient(misocket);
                 clientSocket.start();
@@ -89,8 +88,20 @@ public class ChatServerImpl implements ChatServer {
 	 */
 	@Override
 	public void shutdown() {
-		// TODO Auto-generated method stub
+
+		// Cierra todos los clientes
+		for (Integer id : listadoIds.values()) {
+			remove(id);
+		}
 		
+		if (this.servidorSock.isBound()) {
+			try {
+				this.servidorSock.close();
+			} catch (IOException e) {
+				System.out.println("shutdown: IOException: " + e.getMessage());
+			}
+		}
+	
 	}
 
 	/**
@@ -209,6 +220,8 @@ public class ChatServerImpl implements ChatServer {
 	                		banClient(this.username);
 	                	} else if (recibido.getType().equals(ChatMessage.MessageType.UNBAN)) {
 	                		unBanClient(this.username);
+	                	} else if (recibido.getType().equals(ChatMessage.MessageType.SHUTDOWN)) {
+	                		shutdown();
 	                	}
 	                	
 	                    // Imprimir el mensaje en el área de texto
