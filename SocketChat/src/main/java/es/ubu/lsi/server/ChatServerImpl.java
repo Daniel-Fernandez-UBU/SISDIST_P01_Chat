@@ -11,7 +11,11 @@ public class ChatServerImpl implements ChatServer {
 	private static final int DEFAULT_PORT = 1500;
 	private int port;
 	
-	private List<ObjectOutputStream> listadoFlujosSalida;
+	/** Mapas para guardar todas las listas */
+	private Map<Integer,ObjectOutputStream> listadoFlujosSalida;
+	private Map<Integer,ObjectInputStream> listadoFlujosEntrada;
+	private Map<Integer,Socket> listadoSockets;
+	private Map<Integer,String> listadoClientes;
 
     private List<Object> clientSockets = new ArrayList<>();
     private List<Object> writers = new ArrayList<>();
@@ -33,23 +37,51 @@ public class ChatServerImpl implements ChatServer {
 	/** Fin - Getters y Setters */
 
 
+	/**
+	 * Bucle con el servidor de sockets, esperando y aceptando peticiones.
+	 * Cada peticion genera un nuevo ServerThreadForClient y se arranca el hilo
+	 * correspondiente para que cada cliente tenga el suyo independiente asociado con el servidor
+	 * Socket, flujo de entrada y flujo de salida. Guardar registro de hilos para el push
+	 */
 	@Override
 	public void startup() {
 		// TODO Auto-generated method stub
 		
 	}
 
+	/**
+	 * Cierra todos los flujos de entrada/salida y el socket de cada cliente.
+	 */
 	@Override
 	public void shutdown() {
 		// TODO Auto-generated method stub
 		
 	}
 
+	/**
+	 * Elimina un cliente de la lista de clientes que reciben el mensaje
+	 * por un "BAN"
+	 */
 	@Override
 	public void remove(int id) {
 		// TODO Auto-generated method stub
 		
 	}
+	
+    /**
+     * Método para enviar el mensaje a todos los clientes.
+     * @param args
+     */
+    public void broadcast(ChatMessage mensaje) {
+        for (ObjectOutputStream flujo : listadoFlujosSalida) {
+            try {
+				flujo.writeObject(mensaje);
+				flujo.flush();
+			} catch (IOException e) {
+				System.out.println("broadcast: IOException: " + e.getMessage());
+			} 
+         }
+    }
 
     private class ServerThreadForClient extends Thread {
         private Socket socket;
@@ -88,20 +120,7 @@ public class ChatServerImpl implements ChatServer {
         }
     }
 
-    /**
-     * Método para enviar el mensaje a todos los clientes.
-     * @param args
-     */
-    public void broadcast(ChatMessage mensaje) {
-        for (ObjectOutputStream flujo : listadoFlujosSalida) {
-            try {
-				flujo.writeObject(mensaje);
-				flujo.flush();
-			} catch (IOException e) {
-				System.out.println("broadcast: IOException: " + e.getMessage());
-			} 
-         }
-    }
+
 
     /**
      * Instancia el servidor y lo arranca en el método startup()
