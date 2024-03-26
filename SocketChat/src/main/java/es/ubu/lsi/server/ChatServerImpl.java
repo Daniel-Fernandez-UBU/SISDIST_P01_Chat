@@ -13,15 +13,13 @@ public class ChatServerImpl implements ChatServer {
 	private boolean alive = true;
 	
 	/** Mapas para guardar todas las listas */
-	private Map<Integer,ObjectOutputStream> listadoFlujosSalida = new HashMap<>();
-	private Map<Integer,ObjectInputStream> listadoFlujosEntrada = new HashMap<>();;
-	private Map<Integer,Socket> listadoSockets = new HashMap<>();;
-	private Map<Integer,String> listadoClientes = new HashMap<>();;
+	private HashMap<Integer,ObjectOutputStream> listadoFlujosSalida = new HashMap<>();
+	private HashMap<Integer,ObjectInputStream> listadoFlujosEntrada = new HashMap<>();
+	private HashMap<Integer,Socket> listadoSockets = new HashMap<>();
+	private HashMap<String,Integer> listadoIds = new HashMap<>();
+	private HashMap<Integer,String> listadoUsernames = new HashMap<>();
+	private HashMap<Integer,HashMap<ObjectOutputStream,ObjectInputStream>> clientesBaneados = new HashMap<>();
 	
-	
-
-    private List<Object> clientSockets = new ArrayList<>();
-    private List<Object> writers = new ArrayList<>();
     
 	public ChatServerImpl(int port) {
 		setPort(port);
@@ -101,7 +99,21 @@ public class ChatServerImpl implements ChatServer {
 	 */
 	@Override
 	public void remove(int id) {
-		// TODO Auto-generated method stub
+		
+		// Cerramos todas las conexiones abiertas
+		try {
+			listadoFlujosSalida.get(id).close();
+			listadoSockets.get(id).close();
+			listadoFlujosEntrada.get(id).close();
+		} catch (IOException e) {
+			System.out.println("remove: IOException: " + e.getMessage());
+		}
+		
+		// Borramos el cliente de todas las listas
+        listadoFlujosSalida.remove(id);
+        listadoSockets.remove(id);
+        listadoClientes.remove(id);
+        listadoFlujosEntrada.remove(id);
 		
 	}
 	
@@ -119,16 +131,30 @@ public class ChatServerImpl implements ChatServer {
 			} 
          }
     }
+    
+    private void banClient(String username) {
+    	int idBaneado = listadoClientes.
 
+    }
+
+    /**
+     * Clase que crea el hilo de escucha para cada cliente.
+     * 
+     * Recibe los mensajes y los reenvía a todos los clientes conectados.
+     */
     private class ServerThreadForClient extends Thread {
+    	
+    	/** Atributos de cada hilo */
         private Socket socket;
         private ObjectOutputStream flujoSalida;
         private ObjectInputStream flujoEntrada;
         private String username;
         private int id;
         
-        
-        // Añadimos el cliente a los distintos listados.
+        /**
+         * Constructor de la clase.
+         * @param clientSocket
+         */
         public ServerThreadForClient(Socket clientSocket) {
             this.socket = clientSocket;
         }
@@ -136,20 +162,26 @@ public class ChatServerImpl implements ChatServer {
         public void run() {
 
             try {
-            	
+            	// Generamos flujo de entrada y salida para cada cliente
             	this.flujoSalida = new ObjectOutputStream(this.socket.getOutputStream());
             	this.flujoEntrada = new ObjectInputStream(this.socket.getInputStream());
             	
-            	while (true) {
+            	// Se mantiene activo mientras el servidor está activo
+            	while (alive) {
                 	ChatMessage recibido = (ChatMessage) flujoEntrada.readObject();
                 	this.id = recibido.getId();
+                	
                 	String[] messageParts = recibido.getMessage().split(":");
                 	this.username = messageParts[0];
                 	System.out.println("Mensaje recibido en el servidor: " + recibido.getMessage());
                 	
+                	if (recibido.getType().equals(ChatMessage.MessageType.LOGOUT)) {
+                		remove(this.id);
+                	}
+                	
                     listadoFlujosSalida.put(this.id, this.flujoSalida);
                     listadoSockets.put(this.id, this.socket);
-                    listadoClientes.put(this.id, this.username);
+                    listadoClientes.put(this.username, this.id);
                 	
                     // Imprimir el mensaje en el área de texto
                     System.out.println("\n" + this.username + ": " + messageParts[1]);
@@ -165,10 +197,7 @@ public class ChatServerImpl implements ChatServer {
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
 				e.printStackTrace();
-			} finally {
-                clientSockets.remove(socket);
-  
-            }
+			} 
         }
     }
 
