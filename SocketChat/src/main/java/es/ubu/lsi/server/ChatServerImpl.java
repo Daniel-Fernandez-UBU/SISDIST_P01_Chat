@@ -6,45 +6,92 @@ import java.util.*;
 
 import es.ubu.lsi.common.ChatMessage;
 
+
+// TODO: Auto-generated Javadoc
+/**
+ * Clase Chat Server.
+ * 
+ * @author Daniel Fernandez Barrientos
+ * @version 1.0
+ */
 public class ChatServerImpl implements ChatServer {
 	
+	/**  Atributos de la clase. */
 	private static final int DEFAULT_PORT = 1500;
+	
+	/** The port. */
 	private int port;
+	
+	/** The alive. */
 	private boolean alive = true;
+	
+	/** The servidor sock. */
 	ServerSocket servidorSock;
 	
-	/** Mapas para guardar todas las listas */
+	/**  Mapas para guardar todas las listas. */
 	private HashMap<Integer,ObjectOutputStream> listadoFlujosSalida = new HashMap<>();
+	
+	/** The listado flujos entrada. */
 	private HashMap<Integer,ObjectInputStream> listadoFlujosEntrada = new HashMap<>();
+	
+	/** The listado sockets. */
 	private HashMap<Integer,Socket> listadoSockets = new HashMap<>();
+	
+	/** The listado ids. */
 	private HashMap<String,Integer> listadoIds = new HashMap<>();
+	
+	/** The listado usernames. */
 	private HashMap<Integer,String> listadoUsernames = new HashMap<>();
+	
+	/** The clientes baneados. */
 	private List<String> clientesBaneados = new ArrayList<>();
 	
     
+	/**
+	 * Instantiates a new chat server impl.
+	 *
+	 * @param port the port
+	 */
 	public ChatServerImpl(int port) {
 		setPort(port);
 	}
 	
-	/** Inicio - Getters y Setters */
+	/**
+	 *  Get the port.
+	 *
+	 * @return the port
+	 */
 	public int getPort() {
 		return port;
 	}
 
 
 
+	/**
+	 * Sets the port.
+	 *
+	 * @param port the new port
+	 */
 	public void setPort(int port) {
 		this.port = port;
 	}
 	
 	
 	
-	/** Fin - Getters y Setters */
-
+	/**
+	 *  Get alive.
+	 *
+	 * @return true, if is alive
+	 */
 	public boolean isAlive() {
 		return alive;
 	}
 
+	/**
+	 * Sets the alive.
+	 *
+	 * @param alive the new alive
+	 */
 	public void setAlive(boolean alive) {
 		this.alive = alive;
 	}
@@ -103,7 +150,9 @@ public class ChatServerImpl implements ChatServer {
 
 	/**
 	 * Elimina un cliente de la lista de clientes que reciben el mensaje
-	 * por un "BAN"
+	 * por un "BAN".
+	 *
+	 * @param id the id
 	 */
 	@Override
 	public void remove(int id) {
@@ -134,7 +183,8 @@ public class ChatServerImpl implements ChatServer {
 	
     /**
      * Método para enviar el mensaje a todos los clientes.
-     * @param args
+     *
+     * @param mensaje the mensaje
      */
     public void broadcast(ChatMessage mensaje) {
 
@@ -158,7 +208,8 @@ public class ChatServerImpl implements ChatServer {
     
     /**
      * Clientes baneados.
-     * @param username
+     *
+     * @param username the username
      */
     private void banClient(String username) {
     	clientesBaneados.add(username);
@@ -167,7 +218,8 @@ public class ChatServerImpl implements ChatServer {
     
     /**
      * Clientes no baneados.
-     * @param username
+     *
+     * @param username the username
      */
     private void unBanClient(String username) {
     	clientesBaneados.remove(username);
@@ -181,21 +233,33 @@ public class ChatServerImpl implements ChatServer {
      */
     private class ServerThreadForClient extends Thread {
     	
-    	/** Atributos de cada hilo */
+    	/**  Atributos de cada hilo. */
         private Socket socket;
+        
+        /** The flujo salida. */
         private ObjectOutputStream flujoSalida;
+        
+        /** The flujo entrada. */
         private ObjectInputStream flujoEntrada;
+        
+        /** The username. */
         private String username;
+        
+        /** The id. */
         private int id;
         
         /**
          * Constructor de la clase.
-         * @param clientSocket
+         *
+         * @param clientSocket the client socket
          */
         public ServerThreadForClient(Socket clientSocket) {
             this.socket = clientSocket;
         }
 
+        /**
+         * Run.
+         */
         public void run() {
 
             try {
@@ -250,7 +314,7 @@ public class ChatServerImpl implements ChatServer {
         }
         
        /**
-        * Solo se guarda la primera vez
+        * Solo se guarda la primera vez.
         */
         private void storeClient() {
         	
@@ -270,8 +334,9 @@ public class ChatServerImpl implements ChatServer {
 
 
     /**
-     * Instancia el servidor y lo arranca en el método startup()
-     * @param args
+     * Instancia el servidor y lo arranca en el método startup().
+     *
+     * @param args the arguments
      */
     public static void main(String[] args) {
     	

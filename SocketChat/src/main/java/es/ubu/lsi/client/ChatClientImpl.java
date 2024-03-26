@@ -7,22 +7,35 @@ import java.util.Scanner;
 import es.ubu.lsi.common.ChatMessage;
 import es.ubu.lsi.common.ChatMessage.MessageType;
 
+/**
+ * Clase chat client.
+ * 
+ * @author Daniel Fernandez Barrientos
+ * @version 1.0
+ */
 public class ChatClientImpl implements ChatClient{
 
-	/** Atributos de la clase */
+	/**  Atributos de la clase. */
 	private int id, port;
+	
+	/** The username. */
 	private String server, username;
+	
+	/** The carry on. */
 	private boolean carryOn = true;
 	
-	/** Atributos adicionales */
+	/**  Atributos adicionales. */
 	private Socket miSocket;
+	
+	/** The data. */
 	private ObjectOutputStream data;
 	
 	/**
 	 * Constructor de la clase.
-	 * @param server
-	 * @param port
-	 * @param username
+	 *
+	 * @param server the server
+	 * @param port the port
+	 * @param username the username
 	 */
 	public ChatClientImpl(String server, int port, String username) {
 		this.setPort(port);
@@ -31,7 +44,11 @@ public class ChatClientImpl implements ChatClient{
 		setId();//Generamos Id unico
 	}
 
-	/** Inicio -  Getters y Setters **/
+	/**
+	 *  Inicio -  Getters y Setters *.
+	 *
+	 * @return the port
+	 */
 	/**
 	 * Devuelve el puerto.
 	 * @return port
@@ -43,7 +60,8 @@ public class ChatClientImpl implements ChatClient{
 	
 	/**
 	 * Establece el puerto.
-	 * @param port
+	 *
+	 * @param port the new port
 	 * @see #getPort()
 	 */
 	private void setPort(int port) {
@@ -61,7 +79,7 @@ public class ChatClientImpl implements ChatClient{
 	
 	/**
 	 * Establece el Id.
-	 * @param id
+	 *
 	 * @see #getId()
 	 */
 	public void setId() {
@@ -81,7 +99,8 @@ public class ChatClientImpl implements ChatClient{
 
 	/**
 	 * Establece el servidor.
-	 * @param server
+	 *
+	 * @param server the new server
 	 * @see #getServer()
 	 */
 	public void setServer(String server) {
@@ -99,7 +118,8 @@ public class ChatClientImpl implements ChatClient{
 
 	/**
 	 * Establece el nombre de usuario.
-	 * @param username
+	 *
+	 * @param username the new username
 	 * @see #getUsername()
 	 */
 	public void setUsername(String username) {
@@ -117,13 +137,19 @@ public class ChatClientImpl implements ChatClient{
 
 	/**
 	 * Establece el estado.
-	 * @param carryOn
+	 *
+	 * @param carryOn the new carry on
 	 * @see #iscarryOn
 	 */
 	public void setCarryOn(boolean carryOn) {
 		this.carryOn = carryOn;
 	}
-	/** Fin - Getters y Setters **/
+	
+	/**
+	 *  Fin - Getters y Setters *.
+	 *
+	 * @return true, if successful
+	 */
 	
 	/** Sobreescribimos los métodos de la interfaz con su implementación. */
 	
@@ -142,7 +168,8 @@ public class ChatClientImpl implements ChatClient{
 
 	/**
 	 * Send Message.
-	 * @param msg
+	 *
+	 * @param msg the msg
 	 */
 	@Override
 	public synchronized void sendMessage(ChatMessage msg) {
@@ -183,9 +210,9 @@ public class ChatClientImpl implements ChatClient{
 	 * ChatClientListener Class.
 	 * 
 	 * Clase interna para el flujo de entrada de los mensajes al cliente.
-	 *  
+	 *
+	 * @see ChatClientEvent
 	 */
-	
 	private class ChatClientListener implements Runnable {
         /**
          * Levanta la conexión en modo escucha para recibir los mensajes del servidor.
@@ -225,9 +252,9 @@ public class ChatClientImpl implements ChatClient{
 	 * Método main.
 	 * 
 	 * Encargado de lanzar los clientes.
-	 * 
-	 * @param args
-	 * @throws IOException
+	 *
+	 * @param args the arguments
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static void main(String[] args) throws IOException {
 
@@ -274,6 +301,7 @@ public class ChatClientImpl implements ChatClient{
 	    
 	    while(cliente.carryOn) {
 	    	mensaje = sc.nextLine();
+	    	
 	    	// Incorporamos el nombre de usuario en el mensaje final
 	    	String mensajeFinal = cliente.getUsername() + ":" + mensaje;
 	    	datosEnvio = new ChatMessage(cliente.getId(),tipoMens,mensajeFinal);

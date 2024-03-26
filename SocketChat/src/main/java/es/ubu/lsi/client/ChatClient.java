@@ -3,7 +3,7 @@ package es.ubu.lsi.client;
 import es.ubu.lsi.common.ChatMessage;
 
 /**
- * Client en el Chat.
+ * Interfaz ChatClient.
  * 
  * @author Daniel Fernandez Barrientos
  * @version 1.0
