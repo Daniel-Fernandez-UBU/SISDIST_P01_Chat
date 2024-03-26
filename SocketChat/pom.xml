@@ -108,6 +108,18 @@
 							</arguments>
 						</configuration>
 					</execution>
+					<execution>
+						<id>cliente-dani</id>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>es.ubu.lsi.client.ChatClientImpl</mainClass>
+							<arguments>
+								<argument>dani</argument>
+							</arguments>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
       </plugins>

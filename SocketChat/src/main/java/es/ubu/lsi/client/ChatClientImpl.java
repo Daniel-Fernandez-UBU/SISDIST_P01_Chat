@@ -30,6 +30,11 @@ public class ChatClientImpl implements ChatClient{
 	/** The data. */
 	private ObjectOutputStream data;
 	
+	/** Hilo para escucha. */
+	private ChatClientListener listener;
+	private Thread hilo;
+	
+	
 	/**
 	 * Constructor de la clase.
 	 *
@@ -159,10 +164,10 @@ public class ChatClientImpl implements ChatClient{
 	 */
 	@Override
 	public boolean start() {
-		
-		Thread hilo = new Thread(new ChatClientListener());
+		listener = new ChatClientListener();
+		hilo = new Thread(this.listener);
 		hilo.start();
-		
+
 		return isCarryOn();
 	}
 
@@ -185,12 +190,20 @@ public class ChatClientImpl implements ChatClient{
 	 * Desconecta el cliente.
 	 */
 	@Override
-	public synchronized void disconect() {
+	public void disconect() {
+		
+		listener.stop();
+		
 		try {
 			miSocket.close();
 			setCarryOn(false);
+			hilo.join();
+			
 		} catch (IOException e) {
 			System.out.println("disconect: IOException: " + e.getMessage());
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -214,6 +227,9 @@ public class ChatClientImpl implements ChatClient{
 	 * @see ChatClientEvent
 	 */
 	private class ChatClientListener implements Runnable {
+		
+		private volatile boolean cerrar = false;
+		
         /**
          * Levanta la conexión en modo escucha para recibir los mensajes del servidor.
          * 
@@ -221,20 +237,17 @@ public class ChatClientImpl implements ChatClient{
          */
         @Override
         public void run() {
-        	
+        	ObjectInputStream flujoEntrada = null;
         	try {
-        		ObjectInputStream flujoEntrada = new ObjectInputStream(miSocket.getInputStream());
-        		while(isCarryOn()) {
+        		flujoEntrada = new ObjectInputStream(miSocket.getInputStream());
+        		while(!cerrar) {
         			ChatMessage dataRecibida = (ChatMessage) flujoEntrada.readObject();
         			if (dataRecibida.getId() == getId()) {
         				System.out.println("Yo: " + dataRecibida.getMessage());
         			} else {
         				System.out.println(dataRecibida.getId() + ": " + dataRecibida.getMessage()); //Mostramos el mensaje
         			}
-        		
         		}
-        	
-        		flujoEntrada.close();
         		
         	//Controlamos los mensajes de las excepciones
         	} catch (EOFException e) {
@@ -243,9 +256,29 @@ public class ChatClientImpl implements ChatClient{
         		System.out.println("ChatClientListener: IOException: " + i.getMessage());
         	} catch (ClassNotFoundException c) {
         		System.out.println("ChatClientListener: ClassNotFoundException: " + c.getMessage());
-        	} 
+        	} finally {
+        		cerrarFlujoEntrada(flujoEntrada);
+        	}
 
         }
+        
+        /**
+         * Cerrar.
+         */
+        private void stop() {
+        	this.cerrar=true;
+        }
+        
+        private void cerrarFlujoEntrada(ObjectInputStream flujoEntrada) {
+            if (flujoEntrada != null) {
+                try {
+                    flujoEntrada.close();
+                } catch (IOException e) {
+                    // Manejar la excepción de cierre de flujo de entrada
+                }
+            }
+        }
+        
     }
 		
 	/**
@@ -299,14 +332,29 @@ public class ChatClientImpl implements ChatClient{
 	    datosEnvio = new ChatMessage(cliente.getId(),tipoIni,username+": inicio chat");
 	    cliente.sendMessage(datosEnvio);
 	    
-	    while(cliente.carryOn) {
+	    while(cliente.isCarryOn()) {
 	    	mensaje = sc.nextLine();
 	    	
 	    	// Incorporamos el nombre de usuario en el mensaje final
 	    	String mensajeFinal = cliente.getUsername() + ":" + mensaje;
-	    	datosEnvio = new ChatMessage(cliente.getId(),tipoMens,mensajeFinal);
-	    	cliente.sendMessage(datosEnvio); // Enviamos el mensaje
-	    	if (mensaje.equalsIgnoreCase("logout")) {
+	    	    	
+	    	if (mensaje.split(" ")[0].equalsIgnoreCase("ban")) {
+	    		datosEnvio = new ChatMessage(cliente.getId(),tipoMens=MessageType.BAN,mensajeFinal);
+	    	} else if (mensaje.split(" ")[0].equalsIgnoreCase("unban")) {
+	    		datosEnvio = new ChatMessage(cliente.getId(),MessageType.UNBAN,mensajeFinal);
+	    	} else if (mensaje.equalsIgnoreCase("logout")) {
+	    		datosEnvio = new ChatMessage(cliente.getId(),MessageType.LOGOUT,mensajeFinal);
+	    	} else if (mensaje.equalsIgnoreCase("shutdown")) {
+	    		datosEnvio = new ChatMessage(cliente.getId(),MessageType.SHUTDOWN,mensajeFinal);
+	    	} else {
+	    		datosEnvio = new ChatMessage(cliente.getId(),tipoMens,mensajeFinal);
+	    	} 
+	    	
+	    	if (cliente.isCarryOn()) {
+		    	cliente.sendMessage(datosEnvio); // Enviamos el mensaje
+	    	}
+	    	
+	    	if (mensaje.equalsIgnoreCase("logout") || mensaje.equalsIgnoreCase("shutdown")) {
 	    		// Se cambia a no activo
 	    		cliente.disconect();
 	    	}

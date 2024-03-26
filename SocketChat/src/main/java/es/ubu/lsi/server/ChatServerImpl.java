@@ -46,6 +46,9 @@ public class ChatServerImpl implements ChatServer {
 	/** The clientes baneados. */
 	private List<String> clientesBaneados = new ArrayList<>();
 	
+    /** Mapa con los threads de clientes. */
+    Map<Integer, ServerThreadForClient> listadoThread = new HashMap<>();
+	
     
 	/**
 	 * Instantiates a new chat server impl.
@@ -134,6 +137,11 @@ public class ChatServerImpl implements ChatServer {
 	public void shutdown() {
 
 		// Cierra todos los clientes
+		
+		for (ServerThreadForClient actual : listadoThread.values()) {
+			actual.closeClient();
+		}
+		
 		for (Integer id : listadoIds.values()) {
 			remove(id);
 		}
@@ -156,22 +164,7 @@ public class ChatServerImpl implements ChatServer {
 	 */
 	@Override
 	public void remove(int id) {
-		
-		// Cerramos todas las conexiones abiertas
-		try {
-			if (!listadoFlujosSalida.isEmpty()) {
-				listadoFlujosSalida.get(id).close();
-			}
-			if (!listadoFlujosEntrada.isEmpty()) {
-				listadoFlujosEntrada.get(id).close();
-			}
-			if (!listadoSockets.isEmpty()) {
-				listadoSockets.get(id).close();
-			}
-		} catch (IOException e) {
-			System.out.println("remove: IOException: " + e.getMessage());
-		}
-		
+			
 		// Borramos el cliente de todas las listas
         listadoFlujosSalida.remove(id);
         listadoSockets.remove(id);
@@ -248,6 +241,8 @@ public class ChatServerImpl implements ChatServer {
         /** The id. */
         private int id;
         
+        private boolean clientAlive = true;
+        
         /**
          * Constructor de la clase.
          *
@@ -261,35 +256,43 @@ public class ChatServerImpl implements ChatServer {
          * Run.
          */
         public void run() {
-
+        	
+        	alive = true;
             try {
             	// Generamos flujo de entrada y salida para cada cliente
             	this.flujoSalida = new ObjectOutputStream(this.socket.getOutputStream());
             	this.flujoEntrada = new ObjectInputStream(this.socket.getInputStream());
             	
             	// Se mantiene activo mientras el servidor está activo
-            	while (alive) {
+            	while (clientAlive) {
                 	            		
-            		
             		ChatMessage recibido = (ChatMessage) flujoEntrada.readObject();
                 	this.id = recibido.getId();
                 	
                 	String[] messageParts = recibido.getMessage().split(":");
                 	this.username = messageParts[0];
                 	
+                	
                 	// Se comprueba si no está baneado para reenviar su mensaje.
                 	if (!clientesBaneados.contains(this.username)) {
+                		
                 		// Añadimos los clientes a los listados
 	                	storeClient();
 	                	
 	                	System.out.println("Mensaje recibido en el servidor: " + recibido.getMessage());
 	                	
 	                	if (recibido.getType().equals(ChatMessage.MessageType.LOGOUT)) {
+	                	    //ChatMessage confirmacionLogout = new ChatMessage(this.id,ChatMessage.MessageType.LOGOUT, "logout confirmado");
+	                	    //flujoSalida.writeObject(confirmacionLogout);
+	                	    //flujoSalida.flush();
+	                	    closeClient();
 	                		remove(this.id);
 	                	} else if (recibido.getType().equals(ChatMessage.MessageType.BAN)) {
-	                		banClient(this.username);
+	                		String userban = messageParts[1].split(" ")[1];
+	                		banClient(userban);
 	                	} else if (recibido.getType().equals(ChatMessage.MessageType.UNBAN)) {
-	                		unBanClient(this.username);
+	                		String userban = messageParts[1].split(" ")[1];
+	                		unBanClient(userban);
 	                	} else if (recibido.getType().equals(ChatMessage.MessageType.SHUTDOWN)) {
 	                		shutdown();
 	                		setAlive(false);
@@ -321,13 +324,29 @@ public class ChatServerImpl implements ChatServer {
         	if (listadoUsernames.containsKey(this.id)) {
         		
         	} else {
- 
+        		listadoThread.put(this.id,this);
                 listadoFlujosSalida.put(this.id, this.flujoSalida);
                 listadoSockets.put(this.id, this.socket);
                 listadoIds.put(this.username, this.id);
                 listadoUsernames.put(this.id, this.username);
         	}
-
+        }
+        
+        /**
+         * Cierra la conexion del cliente
+         */
+        public void closeClient() {
+        	clientAlive = false;
+            try {
+                if (listadoFlujosEntrada.get(id) != null)
+                	listadoFlujosEntrada.get(id).close();
+                if (listadoFlujosSalida.get(id) != null)
+                	listadoFlujosSalida.get(id).close();
+                if (listadoSockets.get(id) != null)
+                	listadoSockets.get(id).close();
+            } catch (IOException e) {
+                System.err.println("Error closing the connection to client " + e.getMessage());
+            }
         }
     }
 
