@@ -140,14 +140,23 @@ public class ChatServerImpl implements ChatServer {
      * @param args
      */
     public void broadcast(ChatMessage mensaje) {
-        for (ObjectOutputStream flujo : listadoFlujosSalida.values()) {
+
+        for (Map.Entry<Integer, ObjectOutputStream> entry : listadoFlujosSalida.entrySet()) {
+            Integer id = entry.getKey();
+            ObjectOutputStream flujo = entry.getValue();
+            
             try {
-				flujo.writeObject(mensaje);
-				flujo.flush();
-			} catch (IOException e) {
-				System.out.println("broadcast: IOException: " + e.getMessage());
-			} 
-         }
+                // Se manda solo a los clientes no baneados.
+            	if (!clientesBaneados.contains(listadoUsernames.get(id))) {
+                	flujo.writeObject(mensaje);
+                    flujo.flush();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        
     }
     
     /**
@@ -222,11 +231,16 @@ public class ChatServerImpl implements ChatServer {
 	                		unBanClient(this.username);
 	                	} else if (recibido.getType().equals(ChatMessage.MessageType.SHUTDOWN)) {
 	                		shutdown();
-	                	}
+	                		setAlive(false);
+	                		break; //Terminamos
+	                	} 
 	                	
 	                    // Imprimir el mensaje en el área de texto
 	                    System.out.println("\n" + this.username + ": " + messageParts[1]);
+	                    
+	                    broadcast(recibido);
 	
+	                    /**
 	                    // Reenviar el mensaje a todos los clientes
 	                    for (Map.Entry<Integer, ObjectOutputStream> entry : listadoFlujosSalida.entrySet()) {
 	                        Integer id = entry.getKey();
@@ -242,6 +256,7 @@ public class ChatServerImpl implements ChatServer {
 	                            e.printStackTrace();
 	                        }
 	                    }
+	                    */
                 	}
             	}
 
