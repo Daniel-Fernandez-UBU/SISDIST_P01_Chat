@@ -4,16 +4,58 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class ChatServerImpl {
+import es.ubu.lsi.common.ChatMessage;
+
+public class ChatServerImpl implements ChatServer {
+	
+	private static final int DEFAULT_PORT = 1500;
+	private int port;
+	
+	private List<ObjectOutputStream> listadoFlujosSalida;
 
     private List<Object> clientSockets = new ArrayList<>();
     private List<Object> writers = new ArrayList<>();
+    
+	public ChatServerImpl(int port) {
+		setPort(port);
+	}
+	
+	/** Inicio - Getters y Setters */
+	public int getPort() {
+		return port;
+	}
 
-    private class ChatServerThreadForClient extends Thread {
+
+
+	public void setPort(int port) {
+		this.port = port;
+	}
+	/** Fin - Getters y Setters */
+
+
+	@Override
+	public void startup() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void shutdown() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void remove(int id) {
+		// TODO Auto-generated method stub
+		
+	}
+
+    private class ServerThreadForClient extends Thread {
         private Socket socket;
         private PrintWriter writer;
 
-        public ChatServerThreadForClient(Socket clientSocket) {
+        public ServerThreadForClient(Socket clientSocket) {
             this.socket = clientSocket;
             try {
                 this.writer = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -30,7 +72,7 @@ public class ChatServerImpl {
                 String inputLine;
                 while ((inputLine = in.readLine()) != null) {
                     System.out.println(socket.getPort() + ": " + inputLine);
-                    sendMessageToAllClients(socket.getPort() + ": " + inputLine);
+                    broadcast(socket.getPort() + ": " + inputLine);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -46,21 +88,35 @@ public class ChatServerImpl {
         }
     }
 
-    public void sendMessageToAllClients(String message) {
-        for (Object writer : writers) {
-            ((PrintWriter) writer).println(message);
-        }
+    /**
+     * Método para enviar el mensaje a todos los clientes.
+     * @param args
+     */
+    public void broadcast(ChatMessage mensaje) {
+        for (ObjectOutputStream flujo : listadoFlujosSalida) {
+            try {
+				flujo.writeObject(mensaje);
+				flujo.flush();
+			} catch (IOException e) {
+				System.out.println("broadcast: IOException: " + e.getMessage());
+			} 
+         }
     }
 
+    /**
+     * Instancia el servidor y lo arranca en el método startup()
+     * @param args
+     */
     public static void main(String[] args) {
-        int port = 1500;
-
+    	
         if (args.length != 0) {
             System.err.println("Usage: java ChatServerImpl");
             System.exit(1);
         }
 
-        ChatServerImpl chatServer = new ChatServerImpl();
+        ChatServerImpl chatServer = new ChatServerImpl(DEFAULT_PORT);
+        
+        chatServer.startup();
 
         Thread clientListenerThread = new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(port)) {
@@ -77,5 +133,7 @@ public class ChatServerImpl {
         });
         clientListenerThread.start();
     }
+
+
 }
 
